@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>GeoJSON Viewer</title>
+    <script src="/leaflet/leaflet.js"></script>
+    <script src="/leaflet/Leaflet.ChineseTmsProviders-master/src/leaflet.ChineseTmsProviders.js"></script>
+    <link rel="stylesheet" href="/leaflet/leaflet.css"/>
+    <link rel="stylesheet" href="/css/style.css"/>
+
+</head>
+<body>
+<div id="map">
+    <p id="fileName" class="name"></p>
+
+    <button class="prev mapbu" z-index="1000">上一级</button>
+    <button class="allxian mapbu">县级行政区</button>
+    <button class="alldi mapbu">地级行政区</button>
+    <button class="two mapbu" id="two">一级</button>
+
+</div>
+
+
+<script th:inline="javascript">
+    let map = L.map('map').setView([35, 110], 4);
+
+    // Parse geoJsonData string to JSON object
+    let geoJsonData = JSON.parse([[${geoJsonContent}]]);
+    let name0 = [[${fileName}]];
+    let name1 = name0.split("_")[0];
+    let num = name1 % 10000;
+
+    let url = "../search/" + name1;
+    fetch(url)
+
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
+        })
+        .then(data => {
+
+            let myname = data[0].name;
+            var heading = document.getElementById('fileName');
+            heading.textContent = myname;
+
+        })
+        .catch(error => {
+            console.error("There was a problem with the fetch operation:", error);
+        });
+
+
+    // Check if geoJsonData is an array, sometimes it can be a single object
+    if (!Array.isArray(geoJsonData)) {
+        geoJsonData = [geoJsonData];
+    }
+    L.geoJSON(geoJsonData, {
+        style:
+            {
+                fillColor: 'blue',
+                color: 'blue',
+                fillOpacity: 0.2
+            },
+        onEachFeature: function (feature, layer) {
+            // 在这里执行针对每个对象的操作
+            // 例如，给每个对象添加点击事件
+            let mynum = feature.properties.adcode;
+            let myhtml = `<div class='title'> ${feature.properties.name}</div>`;
+            if (mynum == 810000 || mynum == 820000 || mynum == 710000) {
+                myhtml += `<br><button class='link inbu' adcode='${mynum}'grade="xian">行政区划</button>`
+            } else if (mynum % 10000 == 0) {
+                myhtml += `<br><button class='link inbu' adcode='${mynum}'grade="di">地级行政区</button><br><button class='link inbu' adcode='${mynum}'grade="xian">区县级行政区</button>`
+            } else if (mynum % 100 == 0) {
+                myhtml += `<br><button class='link inbu' adcode='${mynum}'grade="xian">区县级行政区</button>`
+
+            }
+            if (mynum % 100 == 0) {
+                myhtml += `<br><button class="detail inbu"adcode='${mynum}'>详情</button>`
+            }
+            layer.bindPopup(myhtml);
+            layer.on({
+                click: function (e) {
+                    layer.openPopup();
+                    console.log(feature.properties.adcode);
+                }
+            });
+            layer.on('mouseover', function () {
+                layer.setStyle({
+                    fillColor: 'red',
+                    color: 'red',
+                    fillOpacity: 0.2
+                });
+            });
+            layer.on('mouseout', function (e) {
+                layer.setStyle({
+                    fillColor: 'blue',
+                    color: 'blue',
+                    fillOpacity: 0.2
+                });
+            });
+            layer.on('dblclick', function (e) {
+                if (num == 0) {
+                    window.location.href = '/helper/map/' + feature.properties.adcode;
+                }
+            });
+
+        }
+
+
+    }).addTo(map);
+    // Create map
+    let rannum=Math.random();
+    mykey="";
+    if(rannum<0.2){
+        mykey="3c5e0f33671e30f39e620556e64216d5";
+    }
+    else if(rannum<0.4){
+        mykey="f032bc3ebcae209e81163be0d56dc5f9";
+    }
+    else if(rannum<0.6){
+        mykey="49fc7d4ce5402f92f5c55004dbdf3cfc";
+    }
+    else if(rannum<0.8){
+        mykey="82ee32c9f5d092c86b93c9fffbf3bdca";
+    }
+    else{
+        mykey="f205c3f32df2ea156b8d616e7190129b";
+    }
+    L.tileLayer.chinaProvider(
+        'TianDiTu.Normal.Map',
+        {
+            key: mykey,
+            maxZoom: 18,
+            minZoom: 5,
+        }).addTo(map);
+    L.tileLayer.chinaProvider(
+        'TianDiTu.Normal.Annotion',
+        {
+            key: mykey,
+            maxZoom: 18,
+            minZoom: 5,
+        }).addTo(map);
+
+
+    document.addEventListener('click', function (event) {
+        let id1;
+        let id2;
+        if (event.target.classList.contains('link')) {
+            let adcode = event.target.getAttribute('adcode');
+            let grade = event.target.getAttribute('grade');
+            let url = "/helper/search/" + adcode;
+            fetch(url)
+
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    id1 = data[0].id1;
+                    id2 = data[0].id2;
+                    url = "https://xiaoce.fun/q/"
+                    if (grade == "di") {
+                        url = url + id2;
+                    } else {
+                        url = url + id1
+                    }
+
+                    window.open(url, '_blank')
+
+
+                })
+                .catch(error => {
+                    console.error("There was a problem with the fetch operation:", error);
+                });
+
+        }
+        if (event.target.classList.contains('prev')) {
+            url = "/helper/map/"
+            let mynum = Number(name1);
+
+            if (mynum % 10000 != 0) {
+                url += (mynum - mynum % 10000)
+            } else {
+                url += 100000;
+            }
+            window.open(url, "_self")
+        }
+        if (event.target.classList.contains('allxian')) {
+            let mynum = Number(name1);
+
+            let url = "/helper/search/" + mynum;
+            let myurl = "";
+            fetch(url)
+
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    id1 = data[0].id1;
+                    id2 = data[0].id2;
+                    myurl = "https://xiaoce.fun/q/"
+                    myurl = myurl + id1
+
+                    window.open(myurl, '_blank')
+
+
+                })
+                .catch(error => {
+                    console.error("There was a problem with the fetch operation:", error);
+                });
+
+        }
+
+        if (event.target.classList.contains('alldi')) {
+            let mynum = Number(name1);
+
+            let url = "/helper/search/" + mynum;
+            let myurl = "";
+            fetch(url)
+
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    id1 = data[0].id1;
+                    id2 = data[0].id2;
+                    if (id2 != -1) {
+                        myurl = "https://xiaoce.fun/q/"
+                        myurl = myurl + id2
+                        window.open(myurl, '_blank')
+
+                    }
+
+
+                })
+                .catch(error => {
+                    console.error("There was a problem with the fetch operation:", error);
+                });
+
+        }
+        if (event.target.classList.contains('detail')) {
+            let adcode = event.target.getAttribute('adcode');
+            window.location.href = '/helper/map/' + adcode;
+        }
+
+
+    });
+    let button = document.getElementById('two');
+    let showtype = name0.split("_")[1];
+    switch (showtype) {
+        case "":
+            button.style.backgroundColor = 'lightblue';
+            button.innerText = '一级';
+            break;
+        case "2":
+            button.style.backgroundColor = 'lightyellow';
+            button.innerText = '二级';
+            break;
+    }
+    button.addEventListener('click', () => {
+        let url = ""
+        switch (button.innerText) {
+            case "一级":
+                button.style.backgroundColor = 'lightyellow';
+                button.innerText = '二级';
+                url = "/helper/map/" + name1 + "_2";
+                break;
+            case "二级":
+                button.style.backgroundColor = 'lightblue';
+                button.innerText = '一级';
+                url = "/helper/map/" + name1 ;
+
+                break;
+
+        }
+        if (url !== "") {
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    const parser = new DOMParser();
+                    // 解析 HTML 字符串为 DOM 对象
+                    const htmlDoc = parser.parseFromString(data, 'text/html');
+
+                    const firstParagraph = htmlDoc.querySelector('p');
+
+                    console.log()
+                    if(firstParagraph.textContent!="页面不存在"){
+                        window.open(url,"_self")
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+        }
+
+
+
+
+    });
+
+
+</script>
+</body>
+</html>

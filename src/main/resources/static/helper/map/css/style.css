@@ -1,0 +1,67 @@
+#map {
+    position: relative; /* 设置为相对定位 */
+    height: 100vh;
+    /* 你可以添加其他样式，比如宽度、高度、背景等 */
+}
+
+
+
+#map .prev {
+    top:2%; /* 距离顶部10px */
+    z-index: 1000; /* 设置堆叠顺序 */
+}
+
+#map .allxian {
+    top: 6.5%; /* 假设距离顶部40px */
+    z-index: 999; /* 堆叠顺序稍小一些 */
+}
+
+#map .alldi {
+    top: 11%; /* 假设距离顶部70px */
+    z-index: 998; /* 堆叠顺序更小一些 */
+}
+#map .two{
+    top: 15.5%; /* 假设距离顶部70px */
+    z-index: 997; /* 堆叠顺序更小一些 */
+}
+#map .three{
+    top: 20%; /* 假设距离顶部70px */
+    z-index: 996; /* 堆叠顺序更小一些 */
+}
+#map .mapbu{
+    height: 4%;
+    width: 10%;
+    opacity:0.8;
+    background-color:lightblue;
+    color: black;
+    font-weight:bold;
+    position: absolute;
+    right: 1%;
+
+}
+
+#map .name{
+    top: 0.5%;
+    right: 11%; /* 假设还是距离左侧10px */
+    z-index: 990; /* 堆叠顺序更小一些 */
+    font-weight:bold;
+    position: absolute; /* 设置为绝对定位 */
+    height:6%;
+    width: 10%;
+    font-size: 3vw; /* 字体大小根据视口宽度调整 */
+
+}
+
+#map .inbu{
+    font-size: 20px;
+    padding: 10px 20px;
+
+}
+#map .title{
+    font-size: 25px;
+    font-weight:bold;
+    height: 2vh;
+    display: flex;
+    align-items: center;     /* 垂直居中 */
+}
+

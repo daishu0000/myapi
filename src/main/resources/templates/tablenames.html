@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../css/tablenames.css"/>
+</head>
+<body>
+<table id="maintable">
+<tr>
+    <th>id</th>
+    <th>name</th>
+    <th>link</th>
+    <th>edit</th>
+</tr>
+</table>
+<script th:inline="javascript">
+
+    var stringlist = /*[[${list}]]*/ [];
+
+    var table=document.getElementById("maintable")
+
+    for(i=0;i<stringlist.length;i++){
+        let row=table.insertRow(i+1);
+        let indexcell=row.insertCell(0);
+        let stringcell=row.insertCell(1);
+        let urlcell=row.insertCell(2);
+        let editcell=row.insertCell(3)
+
+        let name=stringlist[i]
+
+        indexcell.innerHTML=i;
+        stringcell.innerHTML=name;
+        urlcell.innerHTML=`<a href='/file/${name}'>link</a>`
+        editcell.innerHTML=`<button class="edit" name='${name}'>edit</button>`
+    }
+
+
+    let editbuttons = Array.from(document.getElementsByClassName("edit"));
+    editbuttons.forEach(function(button) {
+        button.addEventListener("click", function(event) {
+
+            let name=event.target.getAttribute('name');
+            let editurl=`/file/${name}`;
+
+            fetch(editurl)
+                .then(response=>{
+                    return response.json();
+                })
+                .then(data=>
+                    {
+                        window.open("edit#data=data:application/json,"+JSON.stringify(data))
+                    }
+                )
+
+        });
+    });
+
+</script>
+</body>
+</html>
