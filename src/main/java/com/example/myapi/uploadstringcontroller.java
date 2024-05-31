@@ -1,5 +1,7 @@
 package com.example.myapi;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,9 +22,18 @@ import java.sql.ResultSet;
 
 @RestController
 public class uploadstringcontroller {
+    @Value("${spring.datasource.username}")
+    private String username;
+
+    @Value("${spring.datasource.password}")
+    private String password;
+
+    @Value("${spring.datasource.url}")
+    private String url;
     @PostMapping("/uploadstring")
     public String uploadstring(@RequestBody String data) {
         String geojson_name = "";
+        String geojson_status = "";
         JsonObject geojson_data_obj = new JsonObject();
         JsonArray geojson_features = new JsonArray();
 
@@ -33,6 +44,10 @@ public class uploadstringcontroller {
 
             JsonElement geojson_name_element = jsonObject.get("name");
             geojson_name = geojson_name_element.getAsString();
+            //status为new,创建新表，为old，覆盖原表
+            JsonElement geojson_ststus_element = jsonObject.get("status");
+            geojson_status = geojson_ststus_element.getAsString();
+
             JsonElement geojson_data_element = jsonObject.get("data");
             geojson_data_obj = geojson_data_element.getAsJsonObject();
             JsonElement geojson_features_element = geojson_data_obj.get("features");
@@ -46,18 +61,15 @@ public class uploadstringcontroller {
         if (geojson_name.isEmpty()) {
             return "error";
         } else {
-            String url = "jdbc:mysql://localhost:3306/file1";
-            String user = "root";
-            String password = "POLK<1";
             try {
                 // 加载MySQL JDBC驱动
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 // 建立数据库连接
-                Connection conn = DriverManager.getConnection(url, user, password);
+                Connection conn = DriverManager.getConnection(url, username, password);
                 // 创建Statement对象执行SQL语句
                 Statement stmt = conn.createStatement();
 
-                String if_sqlsentance="SHOW TABLES;";
+                String if_sqlsentance = "SHOW TABLES;";
                 ResultSet rs = stmt.executeQuery(if_sqlsentance);
                 boolean tableFound = false;
                 while (rs.next()) {
@@ -69,7 +81,14 @@ public class uploadstringcontroller {
                 }
 
                 if (tableFound) {
-                    return "表已创建";
+                    if (geojson_status.equals("old")) {
+                        String delete_sqlsentance=String.format("DROP TABLE %s;",geojson_name);
+                        stmt.execute(delete_sqlsentance);
+                    }
+                    else{
+                        return "表已创建";
+
+                    }
                 }
                 String create_sqlsentance = String.format("""
                         CREATE TABLE `%s` (

@@ -34,6 +34,7 @@ public class table_controller {
         //最终输出的json对象
         JsonObject result_json_obj = new JsonObject();
         result_json_obj.addProperty("type", "FeatureCollection");
+        result_json_obj.addProperty("name", tablename);
 
         //geojson的features数组
         JsonArray geojson_features = new JsonArray();

@@ -7,53 +7,86 @@
 </head>
 <body>
 <table id="maintable">
-<tr>
-    <th>id</th>
-    <th>name</th>
-    <th>link</th>
-    <th>edit</th>
-</tr>
+    <tr>
+        <th>id</th>
+        <th>name</th>
+        <th>link</th>
+        <th>edit</th>
+        <th>delete</th>
+
+    </tr>
 </table>
 <script th:inline="javascript">
 
     var stringlist = /*[[${list}]]*/ [];
 
-    var table=document.getElementById("maintable")
+    var table = document.getElementById("maintable")
 
-    for(i=0;i<stringlist.length;i++){
-        let row=table.insertRow(i+1);
-        let indexcell=row.insertCell(0);
-        let stringcell=row.insertCell(1);
-        let urlcell=row.insertCell(2);
-        let editcell=row.insertCell(3)
+    for (i = 0; i < stringlist.length; i++) {
+        let row = table.insertRow(i + 1);
+        let indexcell = row.insertCell(0);
+        let stringcell = row.insertCell(1);
+        let urlcell = row.insertCell(2);
+        let editcell = row.insertCell(3)
+        let deletecell = row.insertCell(4)
 
-        let name=stringlist[i]
+        let name = stringlist[i]
 
-        indexcell.innerHTML=i;
-        stringcell.innerHTML=name;
-        urlcell.innerHTML=`<a href='/file/${name}'>link</a>`
-        editcell.innerHTML=`<button class="edit" name='${name}'>edit</button>`
+        indexcell.innerHTML = i;
+        stringcell.innerHTML = name;
+        urlcell.innerHTML = `<a href='/file/${name}'>link</a>`
+        editcell.innerHTML = `<button class="edit" name='${name}'>edit</button>`
+        deletecell.innerHTML = `<button class="delete" name='${name}'>delete</button>`
     }
 
 
     let editbuttons = Array.from(document.getElementsByClassName("edit"));
-    editbuttons.forEach(function(button) {
-        button.addEventListener("click", function(event) {
+    editbuttons.forEach(function (button) {
+        button.addEventListener("click", function (event) {
+            let name = event.target.getAttribute('name');
 
-            let name=event.target.getAttribute('name');
-            let editurl=`/file/${name}`;
+            let editurl = `/file/${name}`;
 
             fetch(editurl)
-                .then(response=>{
+                .then(response => {
                     return response.json();
                 })
-                .then(data=>
-                    {
-                        window.open("edit#data=data:application/json,"+JSON.stringify(data))
+                .then(data => {
+                        window.open("edit#data=data:application/json," + JSON.stringify(data))
                     }
                 )
 
+
         });
+    });
+    let deletebuttons = Array.from(document.getElementsByClassName("delete"));
+    deletebuttons.forEach(function (button) {
+        button.addEventListener("click", function (event) {
+            let password=prompt("请输入密码");
+            if(password!="kkk"){
+                return;
+            }
+            let editurl = `/delete`;
+            let name = event.target.getAttribute('name');
+
+            fetch(editurl,
+                {
+                    method: "POST",
+                    body: name
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert("删除成功");
+                    } else {
+                        throw new Error("Network response was not ok");
+                    }
+                })
+            setTimeout(function (){
+                location.reload();
+            },1000)
+
+
+        })
     });
 
 </script>
